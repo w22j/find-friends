@@ -10,13 +10,17 @@ import com.tu.hb.model.domain.User;
 import com.tu.hb.model.request.UserLoginRequest;
 import com.tu.hb.model.request.UserRegisterRequest;
 import com.tu.hb.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.tu.hb.constant.UserConstant.ADMIN_ROLE;
@@ -30,10 +34,14 @@ import static com.tu.hb.constant.UserConstant.USER_LOGIN_STATE;
 @RestController
 @RequestMapping("/user")
 @CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
+@Slf4j
 public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    RedisTemplate redisTemplate;
 
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
@@ -116,8 +124,23 @@ public class UserController {
 
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(int pageNum, int pageSize, HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        String redisKey = String.format("hb:user:recommend:%s", loginUser.getId());
+        //有缓存，直接读取缓存
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
+        if (userPage != null) {
+            return ResultUtils.success(userPage);
+        }
+        //无缓存，查询数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
+        //写入缓存并设置过期时间
+        try {
+            valueOperations.set(redisKey, userList, 30000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("redis set key error", e);
+        }
         return ResultUtils.success(userList);
     }
 
