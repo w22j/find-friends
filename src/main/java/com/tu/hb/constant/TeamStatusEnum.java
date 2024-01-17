@@ -1,8 +1,6 @@
 package com.tu.hb.constant;
 
-import io.swagger.models.auth.In;
-
-public enum TeamStatus {
+public enum TeamStatusEnum {
     PUBLIC("公开", 0),
     PRIVATE("私有", 1),
     SECRET("加密", 2);
@@ -11,18 +9,18 @@ public enum TeamStatus {
     private Integer value;
 
 
-    TeamStatus(String name, Integer value) {
+    TeamStatusEnum(String name, Integer value) {
         this.name = name;
         this.value = value;
     }
 
-    public static TeamStatus getEnumByValue(Integer value) {
+    public static TeamStatusEnum getEnumByValue(Integer value) {
         if (value == null) {
             return null;
         }
-        for (TeamStatus teamStatus : TeamStatus.values()) {
-            if (teamStatus.getValue().equals(value)) {
-                return teamStatus;
+        for (TeamStatusEnum teamStatusEnum : TeamStatusEnum.values()) {
+            if (teamStatusEnum.getValue().equals(value)) {
+                return teamStatusEnum;
             }
         }
         return null;

@@ -10,6 +10,8 @@ import com.tu.hb.model.domain.Team;
 import com.tu.hb.model.domain.User;
 import com.tu.hb.model.dto.TeamQuery;
 import com.tu.hb.model.request.TeamAddRequest;
+import com.tu.hb.model.request.TeamUpdateRequest;
+import com.tu.hb.model.vo.TeamUserVO;
 import com.tu.hb.service.TeamService;
 import com.tu.hb.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -60,11 +62,12 @@ public class TeamController {
     }
 
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateTeam(@RequestBody Team team) {
-        if (team == null) {
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
+        if (teamUpdateRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean result = teamService.updateById(team);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.updateTeam(teamUpdateRequest, loginUser);
         if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
@@ -84,14 +87,12 @@ public class TeamController {
     }
 
     @GetMapping("/list")
-    public BaseResponse<List<Team>> listTeams(TeamQuery teamQuery) {
+    public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery, HttpServletRequest request) {
         if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Team team = new Team();
-        BeanUtils.copyProperties(teamQuery, team);
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        List<Team> teamList = teamService.list(queryWrapper);
+        User loginUser = userService.getLoginUser(request);
+        List<TeamUserVO> teamList = teamService.listTeams(teamQuery, loginUser);
         return ResultUtils.success(teamList);
     }
 
