@@ -5,7 +5,9 @@ import com.tu.hb.model.domain.Team;
 import com.tu.hb.model.domain.User;
 import com.tu.hb.model.domain.UserTeam;
 import com.tu.hb.model.dto.TeamQuery;
+import com.tu.hb.model.request.TeamDeleteRequest;
 import com.tu.hb.model.request.TeamJoinRequest;
+import com.tu.hb.model.request.TeamQuitRequest;
 import com.tu.hb.model.request.TeamUpdateRequest;
 import com.tu.hb.model.vo.TeamUserVO;
 
@@ -47,4 +49,19 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
+
+    /**
+     * 退出队伍
+     * @param teamQuitRequest
+     * @param loginUser
+     * @return
+     */
+    boolean quitTeam(TeamQuitRequest teamQuitRequest, User loginUser);
+
+    /**
+     * 队长删除队伍
+     * @param teamDeleteRequest
+     * @return
+     */
+    boolean deleteTeam(TeamDeleteRequest teamDeleteRequest, User loginUser);
 }

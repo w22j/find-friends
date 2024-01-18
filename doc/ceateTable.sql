@@ -58,6 +58,8 @@ create table team
     isDelete     tinyint  default 0                 not null comment '逻辑删除'
 )
     comment '队伍表';
+ALTER TABLE team MODIFY COLUMN updateTime datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP;
+
 
 
 create table user_team

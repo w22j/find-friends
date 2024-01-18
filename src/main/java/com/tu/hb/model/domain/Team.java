@@ -27,7 +27,7 @@ public class Team implements Serializable {
     private String description;
 
     /**
-     * 创建人
+     * 创建人(队长id)
      */
     private Long userId;
 

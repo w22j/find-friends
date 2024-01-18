@@ -10,9 +10,7 @@ import com.tu.hb.model.domain.Team;
 import com.tu.hb.model.domain.User;
 import com.tu.hb.model.domain.UserTeam;
 import com.tu.hb.model.dto.TeamQuery;
-import com.tu.hb.model.request.TeamAddRequest;
-import com.tu.hb.model.request.TeamJoinRequest;
-import com.tu.hb.model.request.TeamUpdateRequest;
+import com.tu.hb.model.request.*;
 import com.tu.hb.model.vo.TeamUserVO;
 import com.tu.hb.service.TeamService;
 import com.tu.hb.service.UserService;
@@ -51,12 +49,13 @@ public class TeamController {
         return ResultUtils.success(teamId);
     }
 
-    @DeleteMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestBody long id) {
-        if (id <= 0) {
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteTeam(@RequestBody TeamDeleteRequest teamDeleteRequest, HttpServletRequest request) {
+        if (teamDeleteRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean result = teamService.removeById(id);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.deleteTeam(teamDeleteRequest, loginUser);
         if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
@@ -98,6 +97,7 @@ public class TeamController {
         return ResultUtils.success(teamList);
     }
 
+    //todo 分页未实现
     @GetMapping("/list/page")
     public BaseResponse<Page<Team>> listTeamsByPage(TeamQuery teamQuery) {
         if (teamQuery == null) {
@@ -123,6 +123,20 @@ public class TeamController {
         }
         return ResultUtils.success(true);
     }
+
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitRequest teamQuitRequest, HttpServletRequest request) {
+        if (teamQuitRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.quitTeam(teamQuitRequest, loginUser);
+        if (!result) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+        return ResultUtils.success(true);
+    }
+
 
 
 }
