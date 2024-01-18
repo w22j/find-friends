@@ -8,8 +8,10 @@ import com.tu.hb.common.ResultUtils;
 import com.tu.hb.exception.BusinessException;
 import com.tu.hb.model.domain.Team;
 import com.tu.hb.model.domain.User;
+import com.tu.hb.model.domain.UserTeam;
 import com.tu.hb.model.dto.TeamQuery;
 import com.tu.hb.model.request.TeamAddRequest;
+import com.tu.hb.model.request.TeamJoinRequest;
 import com.tu.hb.model.request.TeamUpdateRequest;
 import com.tu.hb.model.vo.TeamUserVO;
 import com.tu.hb.service.TeamService;
@@ -107,6 +109,19 @@ public class TeamController {
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
         Page<Team> pageResult = teamService.page(page, queryWrapper);
         return ResultUtils.success(pageResult);
+    }
+
+    @PostMapping("/join")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request) {
+        if (teamJoinRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
+        if (!result) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+        return ResultUtils.success(true);
     }
 
 

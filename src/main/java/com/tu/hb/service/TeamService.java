@@ -3,7 +3,9 @@ package com.tu.hb.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tu.hb.model.domain.Team;
 import com.tu.hb.model.domain.User;
+import com.tu.hb.model.domain.UserTeam;
 import com.tu.hb.model.dto.TeamQuery;
+import com.tu.hb.model.request.TeamJoinRequest;
 import com.tu.hb.model.request.TeamUpdateRequest;
 import com.tu.hb.model.vo.TeamUserVO;
 
@@ -37,4 +39,12 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser);
+
+    /**
+     * 加入队伍
+     * @param teamJoinRequest
+     * @param loginUser
+     * @return
+     */
+    boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
 }

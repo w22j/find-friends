@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 用户登录请求体
+ * 创建队伍请求体
  *
  * @author The tu
  */
