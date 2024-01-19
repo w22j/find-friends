@@ -130,6 +130,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             if (teamId != null && teamId > 0) {
                 queryWrapper.eq("id", teamId);
             }
+            // 根据队伍id列表查询
+            List<Long> idList = teamQuery.getIdList();
+            if (CollectionUtils.isNotEmpty(idList)) {
+                queryWrapper.in("id", idList);
+            }
             // 可以通过某个关键词去对名称和描述统一查询
             String searchText = teamQuery.getSearchText();
             if (StringUtils.isNotBlank(searchText)) {

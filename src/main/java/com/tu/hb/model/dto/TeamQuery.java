@@ -4,6 +4,8 @@ package com.tu.hb.model.dto;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class TeamQuery extends PageQuery {
@@ -12,6 +14,11 @@ public class TeamQuery extends PageQuery {
      * id
      */
     private Long id;
+
+    /**
+     * idList
+     */
+    private List<Long> idList;
 
     /**
      * 队伍名
