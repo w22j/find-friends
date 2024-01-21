@@ -102,6 +102,18 @@ public class TeamController {
         }
         User loginUser = userService.getLoginUser(request);
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery, loginUser);
+        // 判断用户是否已加入队伍
+        List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        userTeamQueryWrapper.eq("userId", loginUser.getId());
+        userTeamQueryWrapper.in("teamId", teamIdList);
+        List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
+        // 将已加入的队伍id取出
+        Set<Long> hasJoinTeamIdList = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+        teamList.forEach(team -> {
+            boolean hasJoin = hasJoinTeamIdList.contains(team.getId());
+            team.setHasJoin(hasJoin);
+        });
         return ResultUtils.success(teamList);
     }
 
