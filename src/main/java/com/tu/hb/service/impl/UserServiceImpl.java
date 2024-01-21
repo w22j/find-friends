@@ -9,6 +9,8 @@ import com.tu.hb.common.ErrorCode;
 import com.tu.hb.mapper.UserMapper;
 import com.tu.hb.model.domain.User;
 import com.tu.hb.service.UserService;
+import com.tu.hb.utils.AlgorithmUtils;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -245,6 +247,55 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public Boolean isAdmin(User loginUser) {
         return loginUser != null && loginUser.getUserRole() == ADMIN_ROLE;
+    }
+
+    @Override
+    public List<User> matchUsers(long num, User loginUser) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "tags");
+        queryWrapper.isNotNull("tags");
+        List<User> userList = this.list(queryWrapper);
+        String tags = loginUser.getTags();
+        Gson gson = new Gson();
+        List<String> tagList = gson.fromJson(tags, new TypeToken<List<String>>() {
+        }.getType());
+        // 用户列表的下标 => 相似度
+        List<Pair<User, Long>> list = new ArrayList<>();
+        for (User user : userList) {
+            String userTags = user.getTags();
+            if (loginUser.getId().equals(user.getId()) || StringUtils.isBlank(userTags)) {
+                continue;
+            }
+            List<String> userTagList = gson.fromJson(userTags, new TypeToken<List<String>>() {
+            }.getType());
+            // 计算分数
+            long distance = AlgorithmUtils.minDistance(tagList, userTagList);
+            list.add(new Pair<>(user, distance));
+        }
+        // 按编辑距离从小到大排序
+        List<Pair<User, Long>> topUserList = list.stream()
+                .sorted((a, b) -> (int) (a.getValue() - b.getValue()))
+                .limit(num)
+                .collect(Collectors.toList());
+        // 排好顺序的id列表
+        List<Long> userIdList = topUserList.stream()
+                .map(pair -> pair.getKey().getId())
+                .collect(Collectors.toList());
+        // in不会按照指定的顺序去查询，要存入map里面去映射一下
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.in("id", userIdList);
+        // 1, 3, 2
+        // User1、User2、User3
+        // 1 => User1, 2 => User2, 3 => User3
+        Map<Long, List<User>> userIdUserListMap = this.list(userQueryWrapper).stream()
+                .map(this::setSafetyUser)
+                .collect(Collectors.groupingBy(User::getId));
+        //对排好顺序的列表进行遍历，并从map中取出对象存入最终的列表
+        List<User> finalUserList = new ArrayList<>();
+        for (Long userId : userIdList) {
+            finalUserList.add(userIdUserListMap.get(userId).get(0));
+        }
+        return finalUserList;
     }
 
     /**

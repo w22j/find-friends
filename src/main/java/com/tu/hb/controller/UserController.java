@@ -119,7 +119,6 @@ public class UserController {
         }
         List<User> userList = userService.searchUserByTags(tagNameList);
         return ResultUtils.success(userList);
-
     }
 
     @GetMapping("/recommend")
@@ -165,6 +164,23 @@ public class UserController {
         boolean result = userService.removeById(id);
         return ResultUtils.success(result);
     }
+
+    /**
+     * 获取最匹配的用户
+     * @param num
+     * @param request
+     * @return
+     */
+    @GetMapping("/match")
+    public BaseResponse<List<User>> matchUsers(long num, HttpServletRequest request){
+        if (num <= 0 || num > 20) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        List<User> userList = userService.matchUsers(num, loginUser);
+        return ResultUtils.success(userList);
+    }
+
 
 
 }
