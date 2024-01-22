@@ -22,6 +22,7 @@ import com.tu.hb.service.UserService;
 import com.tu.hb.service.UserTeamService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
     @Resource
     private UserTeamService userTeamService;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     @Override
     @Transactional
