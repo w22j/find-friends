@@ -180,6 +180,7 @@ public class TeamController {
         User loginUser = userService.getLoginUser(request);
         teamQuery.setUserId(loginUser.getId());
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery, loginUser);
+        getJoinTeamUserNum(teamList);
         return ResultUtils.success(teamList);
     }
 
@@ -206,9 +207,20 @@ public class TeamController {
         List<Long> idList = new ArrayList<>(listMap.keySet());
         teamQuery.setIdList(idList);
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery, loginUser);
+        getJoinTeamUserNum(teamList);
         return ResultUtils.success(teamList);
     }
 
-
+    private void getJoinTeamUserNum(List<TeamUserVO> teamList) {
+        List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
+        // 查询已加入队伍的人数
+        QueryWrapper<UserTeam> hasJoinNumQueryWrapper = new QueryWrapper<>();
+        hasJoinNumQueryWrapper.in("teamId", teamIdList);
+        // 队伍 id => 加入这个队伍的用户列表
+        Map<Long, List<UserTeam>> hasJoinTeamNum = userTeamService.list(hasJoinNumQueryWrapper).stream().collect(Collectors.groupingBy(UserTeam::getTeamId));
+        teamList.forEach(team -> {
+            team.setHasJoinNum(hasJoinTeamNum.getOrDefault(team.getId(), new ArrayList<>()).size());
+        });
+    }
 
 }
