@@ -47,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword) {
         // 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
@@ -57,9 +57,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
-        }
-        if (planetCode.length() > 5) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编号过长");
         }
         // 账号不能包含特殊字符
         String regex = "^[a-zA-Z0-9_]+$";
@@ -78,20 +75,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (count > 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
         }
-        // 星球编号不能重复
-        queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("planetCode", planetCode);
-        count = this.count(queryWrapper);
-        if (count > 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "编号重复");
-        }
         //加密
         String dealPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
 
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(dealPassword);
-        user.setPlanetCode(planetCode);
         boolean result = this.save(user);
         if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败");
@@ -152,7 +141,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserRole(originUser.getUserRole());
         safetyUser.setUserStatus(originUser.getUserStatus());
         safetyUser.setCreateTime(originUser.getCreateTime());
-        safetyUser.setPlanetCode(originUser.getPlanetCode());
         safetyUser.setTags(originUser.getTags());
         safetyUser.setProfile(originUser.getProfile());
         return safetyUser;

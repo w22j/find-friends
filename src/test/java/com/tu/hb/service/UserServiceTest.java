@@ -23,7 +23,7 @@ class UserServiceTest extends UserServiceImpl {
         String userPassword = "12345678";
         String checkPassword = "12345678";
         String planetCode = "1";
-        long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword);
         /*Assertions.assertEquals(-1, result);
         userAccount = "yu";
         result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);

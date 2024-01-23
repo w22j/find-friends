@@ -32,7 +32,8 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://zhb.wang-code.icu"}, allowCredentials = "true")
+//http://zhb.wang-code.icu
+@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
 @Slf4j
 public class TeamController {
 
@@ -200,6 +201,10 @@ public class TeamController {
         QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userId", loginUser.getId());
         List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        // 如果未加入队伍，返回空列表
+        if (userTeamList.size() <= 0) {
+            return ResultUtils.success(new ArrayList<TeamUserVO>());
+        }
         // 根据队伍id分组
         Map<Long, List<UserTeam>> listMap = userTeamList.stream()
                 .collect(Collectors.groupingBy(UserTeam::getTeamId));

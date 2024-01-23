@@ -40,7 +40,6 @@ public class ImportUsersTest {
                 user.setEmail("1234@qq.com");
                 user.setUserStatus(0);
                 user.setUserRole(0);
-                user.setPlanetCode("11111");
                 user.setTags("[]");
                 userList.add(user);
             }
@@ -78,7 +77,6 @@ public class ImportUsersTest {
                 user.setEmail("1234@qq.com");
                 user.setUserStatus(0);
                 user.setUserRole(0);
-                user.setPlanetCode("11111");
                 user.setTags("[]");
                 userList.add(user);
                 if (j % batchSize == 0) {

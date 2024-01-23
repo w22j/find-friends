@@ -32,7 +32,6 @@ public class ImportUsers {
             user.setEmail("1234@qq.com");
             user.setUserStatus(0);
             user.setUserRole(0);
-            user.setPlanetCode("11111");
             user.setTags("[]");
             //userMapper.insert(user);
         }

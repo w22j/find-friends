@@ -64,10 +64,6 @@ public class UserVO implements Serializable {
      */
     private Integer userRole;
 
-    /**
-     * 星球编号
-     */
-    private String planetCode;
 
     /**
      * 用户所拥有的标签
