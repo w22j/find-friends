@@ -29,10 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -163,7 +160,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             if (userId != null && userId > 0) {
                 queryWrapper.eq("userId", userId);
             }
-            // 只有管理员才能查看私有和加密的队伍
+            // 只有管理员才能查看私有的队伍
             Integer status = teamQuery.getStatus();
             TeamStatusEnum statusEnum = TeamStatusEnum.getEnumByValue(status);
             if (statusEnum == null) {
@@ -173,6 +170,80 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 throw new BusinessException(ErrorCode.NO_AUTH);
             }
             queryWrapper.like("status", statusEnum.getValue());
+        }
+        // 已过期的队伍不会被查询(查询未过期的)
+        // expireTime > new Date or expireTime == null
+        queryWrapper.and(qw -> qw.gt("expireTime", new Date()).or().isNull("expireTime"));
+        // 根据组合条件查询队伍列表
+        List<Team> teamList = this.list(queryWrapper);
+        if (CollectionUtils.isEmpty(teamList)) {
+            return new ArrayList<>();
+        }
+        // 关联查询创建人的用户信息
+        List<TeamUserVO> teamUserVOList = new ArrayList<>();
+        for (Team team : teamList) {
+            Long userId = team.getUserId();
+            // userId不存在，执行下一次循环插入
+            if (userId == null) {
+                continue;
+            }
+            TeamUserVO teamUserVO = new TeamUserVO();
+            BeanUtils.copyProperties(team, teamUserVO);
+            //脱敏用户信息
+            User user = userService.getById(userId);
+            if (user != null) {
+                UserVO userVO = new UserVO();
+                BeanUtils.copyProperties(user, userVO);
+                teamUserVO.setCreateUser(userVO);
+            }
+            teamUserVOList.add(teamUserVO);
+        }
+        return teamUserVOList;
+    }
+
+    /**
+     * todo 获取我加入的队伍
+     * @param teamQuery
+     * @param loginUser
+     * @return
+     */
+
+    @Override
+    public List<TeamUserVO> listTeamsByJoin(TeamQuery teamQuery, User loginUser) {
+        // 从请求参数中取出队伍名称等查询条件，如果存在则查询
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        // 组合条件查询
+        if (teamQuery != null) {
+            Long teamId = teamQuery.getId();
+            if (teamId != null && teamId > 0) {
+                queryWrapper.eq("id", teamId);
+            }
+            // 根据队伍id列表查询
+            List<Long> idList = teamQuery.getIdList();
+            if (CollectionUtils.isNotEmpty(idList)) {
+                queryWrapper.in("id", idList);
+            }
+            // 可以通过某个关键词去对名称和描述统一查询
+            String searchText = teamQuery.getSearchText();
+            if (StringUtils.isNotBlank(searchText)) {
+                queryWrapper.and(qw -> qw.like("name", searchText).or().like("description", searchText));
+            }
+            String name = teamQuery.getName();
+            if (StringUtils.isNotBlank(name)) {
+                queryWrapper.like("name", name);
+            }
+            String description = teamQuery.getDescription();
+            if (StringUtils.isNotBlank(description)) {
+                queryWrapper.like("description", description);
+            }
+            Integer maxNum = teamQuery.getMaxNum();
+            if (maxNum != null && maxNum > 0) {
+                queryWrapper.like("maxNum", maxNum);
+            }
+            Long userId = teamQuery.getUserId();
+            if (userId != null && userId > 0) {
+                queryWrapper.eq("userId", userId);
+            }
         }
         // 已过期的队伍不会被查询(查询未过期的)
         // expireTime > new Date or expireTime == null
@@ -273,12 +344,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码不正确");
             }
         }
-        //队伍已满
         RLock lock = redissonClient.getLock("hb:joinTeam");
         while (true) {
             try {
                 if (lock.tryLock(0, -1, TimeUnit.MILLISECONDS)) {
                     System.out.println("getLock: " + Thread.currentThread().getId());
+                    //队伍已满
                     QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
                     queryWrapper.eq("teamId", teamId);
                     long count = userTeamService.count(queryWrapper);
@@ -366,7 +437,6 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 Team updateTeam = new Team();
                 updateTeam.setId(teamId);
                 updateTeam.setUserId(nextUserId);
-                updateTeam.setUpdateTime(new Date());
                 boolean result = this.updateById(updateTeam);
                 if (!result) {
                     throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新队伍队长失败");
@@ -402,6 +472,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         // 4. 直接删除队伍
         return this.removeById(teamId);
     }
+
+
 
     /**
      * 根据id获取队伍信息

@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://zhb.wang-code.icu"}, allowCredentials = "true")
 @Slf4j
 public class TeamController {
 
@@ -211,6 +211,10 @@ public class TeamController {
         return ResultUtils.success(teamList);
     }
 
+    /**
+     * 查询已加入队伍的人数
+     * @param teamList
+     */
     private void getJoinTeamUserNum(List<TeamUserVO> teamList) {
         List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
         // 查询已加入队伍的人数

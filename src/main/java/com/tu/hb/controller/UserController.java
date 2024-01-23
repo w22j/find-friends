@@ -33,7 +33,7 @@ import static com.tu.hb.constant.UserConstant.USER_LOGIN_STATE;
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://zhb.wang-code.icu"}, allowCredentials = "true")
 @Slf4j
 public class UserController {
 
