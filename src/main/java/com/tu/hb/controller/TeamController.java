@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/team")
-//http://zhb.wang-code.icu
-@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
 @Slf4j
 public class TeamController {
 
@@ -212,8 +210,28 @@ public class TeamController {
         List<Long> idList = new ArrayList<>(listMap.keySet());
         teamQuery.setIdList(idList);
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery, loginUser);
+        getHasJoinTeam(loginUser, teamList);
         getJoinTeamUserNum(teamList);
         return ResultUtils.success(teamList);
+    }
+
+    /**
+     * 查询是否加入队伍（返回给前端的按钮展示）
+     * @param loginUser
+     * @param teamList
+     */
+    private void getHasJoinTeam(User loginUser, List<TeamUserVO> teamList) {
+        // 判断用户是否已加入队伍
+        List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        userTeamQueryWrapper.eq("userId", loginUser.getId());
+        userTeamQueryWrapper.in("teamId", teamIdList);
+        // 将已加入的队伍id取出
+        Set<Long> hasJoinTeamIdList = userTeamService.list(userTeamQueryWrapper).stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+        teamList.forEach(team -> {
+            boolean hasJoin = hasJoinTeamIdList.contains(team.getId());
+            team.setHasJoin(hasJoin);
+        });
     }
 
     /**
