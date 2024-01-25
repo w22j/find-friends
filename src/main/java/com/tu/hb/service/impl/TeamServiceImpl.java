@@ -207,7 +207,6 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      * @param loginUser
      * @return
      */
-
     @Override
     public List<TeamUserVO> listTeamsByJoin(TeamQuery teamQuery, User loginUser) {
         // 从请求参数中取出队伍名称等查询条件，如果存在则查询
@@ -298,7 +297,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         String name = teamUpdateRequest.getName();
         String description = teamUpdateRequest.getDescription();
         Date expireTime = teamUpdateRequest.getExpireTime();
-        if (oldTeam.getName().equals(name) && oldTeam.getDescription().equals(description) && oldTeam.getStatus().equals(status) && oldTeam.getExpireTime().equals(expireTime)) {
+        String avatarUrl = teamUpdateRequest.getAvatarUrl();
+        if (oldTeam.getName().equals(name) && oldTeam.getDescription().equals(description) && oldTeam.getStatus().equals(status) && oldTeam.getExpireTime().equals(expireTime) && oldTeam.getAvatarUrl().equals(avatarUrl)) {
             return true;
         }
         // 5. 修改队伍状态为加密时，需要设置密码
@@ -308,11 +308,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "加密房间时需要设置密码");
             }
         }
-        //    修改队伍状态为公开时，需要清空密码
+        //    修改队伍状态为公开时，清空密码
         if (TeamStatusEnum.PUBLIC.equals(statusEnum)) {
-            if (StringUtils.isNotBlank(password)) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "公开房间时需要清空密码");
-            }
+            teamUpdateRequest.setPassword("");
         }
         Team updateTeam = new Team();
         BeanUtils.copyProperties(teamUpdateRequest, updateTeam);

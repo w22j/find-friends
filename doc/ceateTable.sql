@@ -49,6 +49,7 @@ create table team
     id           bigint auto_increment comment 'id'
         primary key,
     name         varchar(256)                       not null comment '队伍名',
+    avatarUrl    varchar(1024)                      null comment '队伍头像',
     description  varchar(1024)                      null comment '队伍描述',
     userId       bigint                             comment '创建人',
     maxNum       int      default 1                 not null comment '队伍最大人数',
