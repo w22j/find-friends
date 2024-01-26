@@ -2,6 +2,7 @@ package com.tu.hb.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tu.hb.model.domain.User;
+import com.tu.hb.model.request.UserTagsUpdateRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -24,7 +25,7 @@ public interface UserService extends IService<User> {
      * @param checkPassword 校验密码
      * @return
      */
-    long userRegister(String userAccount, String userPassword, String checkPassword);
+    long userRegister(String username, String userAccount, String userPassword, String checkPassword);
 
     /**
      * 用户登录
@@ -70,7 +71,6 @@ public interface UserService extends IService<User> {
      */
     User getLoginUser(HttpServletRequest request);
 
-
     /**
      * 是否为管理员
      * @param request
@@ -92,4 +92,12 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<User> matchUsers(long num, User loginUser);
+
+    /**
+     * 更改用户标签
+     * @param tagsUpdateRequest
+     * @param loginUser
+     * @return
+     */
+    boolean updateTags(UserTagsUpdateRequest tagsUpdateRequest, User loginUser);
 }

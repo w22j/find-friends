@@ -1,5 +1,7 @@
 package com.tu.hb.service;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.tu.hb.model.domain.User;
 import com.tu.hb.service.impl.UserServiceImpl;
 import org.junit.Assert;
@@ -10,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @SpringBootTest
 class UserServiceTest extends UserServiceImpl {
@@ -19,11 +22,11 @@ class UserServiceTest extends UserServiceImpl {
 
     @Test
     void userRegister() {
-        String userAccount = "yupi";
+        String username = "wang";
+        String userAccount = "wang";
         String userPassword = "12345678";
         String checkPassword = "12345678";
-        String planetCode = "1";
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(username, userAccount, userPassword, checkPassword);
         /*Assertions.assertEquals(-1, result);
         userAccount = "yu";
         result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
@@ -53,5 +56,15 @@ class UserServiceTest extends UserServiceImpl {
         List<String> tagNameList = Arrays.asList("java", "python");
         List<User> userList = userService.searchUserByTags(tagNameList);
         Assert.assertNotNull(userList);
+    }
+
+    @Test
+    void testUpdateUserByTags() {
+        List<String> list = Arrays.asList("java", "大一", "男");
+        String[] array = list.toArray(new String[0]);
+        String tags = "[" + String.join(",", array) + "]";
+        Gson gson = new Gson();
+        List<String> oldTagsList = gson.fromJson(tags, new TypeToken<List<String>>() {}.getType());
+        System.out.println(oldTagsList);
     }
 }

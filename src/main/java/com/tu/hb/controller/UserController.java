@@ -9,6 +9,7 @@ import com.tu.hb.exception.BusinessException;
 import com.tu.hb.model.domain.User;
 import com.tu.hb.model.request.UserLoginRequest;
 import com.tu.hb.model.request.UserRegisterRequest;
+import com.tu.hb.model.request.UserTagsUpdateRequest;
 import com.tu.hb.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,7 +34,6 @@ import static com.tu.hb.constant.UserConstant.USER_LOGIN_STATE;
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
 @Slf4j
 public class UserController {
 
@@ -48,13 +48,14 @@ public class UserController {
         if (userRegisterRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        String username = userRegisterRequest.getUsername();
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+        if (StringUtils.isAnyBlank(username, userAccount, userPassword, checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(username, userAccount, userPassword, checkPassword);
         return ResultUtils.success(result);
     }
 
@@ -120,6 +121,16 @@ public class UserController {
         return ResultUtils.success(userList);
     }
 
+    @PostMapping("/update/tags")
+    public BaseResponse<Boolean> updateUserTags(@RequestBody UserTagsUpdateRequest tagsUpdateRequest, HttpServletRequest request){
+        if (tagsUpdateRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = userService.updateTags(tagsUpdateRequest, loginUser);
+        return ResultUtils.success(result);
+    }
+
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(int pageNum, int pageSize, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
@@ -133,6 +144,11 @@ public class UserController {
         //无缓存，查询数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
+        //用户信息脱敏
+        for (User user : userList.getRecords()) {
+            userService.setSafetyUser(user);
+            user.setUserPassword("");
+        }
         //写入缓存并设置过期时间
         try {
             valueOperations.set(redisKey, userList, 30000, TimeUnit.MILLISECONDS);
@@ -179,6 +195,16 @@ public class UserController {
         List<User> userList = userService.matchUsers(num, loginUser);
         return ResultUtils.success(userList);
     }
+
+    @GetMapping("/{id}")
+    public BaseResponse<User> getUserById(@PathVariable long id){
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User user = userService.getById(id);
+        return ResultUtils.success(userService.setSafetyUser(user));
+    }
+
 
 
 

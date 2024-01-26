@@ -8,11 +8,13 @@ import com.tu.hb.exception.BusinessException;
 import com.tu.hb.common.ErrorCode;
 import com.tu.hb.mapper.UserMapper;
 import com.tu.hb.model.domain.User;
+import com.tu.hb.model.request.UserTagsUpdateRequest;
 import com.tu.hb.service.UserService;
 import com.tu.hb.utils.AlgorithmUtils;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -47,10 +49,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String username,String userAccount, String userPassword, String checkPassword) {
         // 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+        if (StringUtils.isAnyBlank(username, userAccount, userPassword, checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+        }
+        if (username.length() > 20) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "昵称不能超过20个字符");
         }
         if (userAccount.length() < 4) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
@@ -79,8 +84,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String dealPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
 
         User user = new User();
+        user.setUsername(username);
         user.setUserAccount(userAccount);
         user.setUserPassword(dealPassword);
+        user.setTags("[]");
         boolean result = this.save(user);
         if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败");
@@ -116,7 +123,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 用户不存在
         if (user == null) {
             log.info("user login failed, userAccount can not match userPassword!");
-            throw new BusinessException(ErrorCode.NULL_ERROR, "查无用户");
+            throw new BusinessException(ErrorCode.NULL_ERROR, "请检查账号与密码");
         }
         // 信息脱敏
         User safetyUser = setSafetyUser(user);
@@ -201,6 +208,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        if (!StringUtils.isAnyBlank(user.getProfile()) && user.getProfile().length() > 30) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "简介不能超过30个字符");
+        }
+        if (!StringUtils.isAnyBlank(user.getUsername()) && user.getUsername().length() > 20) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "昵称不能超过20个字符");
+        }
+        if (!StringUtils.isAnyBlank(user.getPhone()) && user.getPhone().length() > 18) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "联系方式不能超过18个字符");
+        }
         //是管理员，直接更改
         //不是管理员，只有当前登录用户可更改
         if (!isAdmin(loginUser) && loginUser.getId() != userId) {
@@ -284,6 +300,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             finalUserList.add(userIdUserListMap.get(userId).get(0));
         }
         return finalUserList;
+    }
+
+    @Override
+    public boolean updateTags(UserTagsUpdateRequest tagsUpdateRequest, User loginUser) {
+        if (tagsUpdateRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long userId = tagsUpdateRequest.getId();
+        if (userId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该用户不存在");
+        }
+        List<String> newTagList = tagsUpdateRequest.getTagList();
+        if (newTagList.size() > 12) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "最多设置12个标签");
+        }
+        if (!isAdmin(loginUser) && userId != loginUser.getId()) {
+            throw new BusinessException(ErrorCode.NO_AUTH, "无权限");
+        }
+        User user = userMapper.selectById(userId);
+        String tags = user.getTags();
+        Gson gson = new Gson();
+        List<String> oldTagsList = gson.fromJson(tags, new TypeToken<List<String>>() {}.getType());
+        // 添加新标签
+        oldTagsList.addAll(newTagList.stream().filter(tag -> !oldTagsList.contains(tag)).collect(Collectors.toList()));
+        // 移除老标签
+        oldTagsList.removeAll(oldTagsList.stream().filter(tag -> !newTagList.contains(tag)).collect(Collectors.toList()));
+        String tagList = gson.toJson(newTagList);
+        //更改标签
+        user.setTags(tagList);
+        return this.updateById(user);
     }
 
     /**
