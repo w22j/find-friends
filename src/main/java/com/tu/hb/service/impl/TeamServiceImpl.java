@@ -202,7 +202,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     }
 
     /**
-     * todo 获取我加入的队伍
+     * 获取我加入的队伍
      * @param teamQuery
      * @param loginUser
      * @return

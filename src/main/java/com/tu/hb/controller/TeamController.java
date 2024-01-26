@@ -16,6 +16,7 @@ import com.tu.hb.service.TeamService;
 import com.tu.hb.service.UserService;
 import com.tu.hb.service.UserTeamService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -122,6 +123,9 @@ public class TeamController {
         teamList.forEach(team -> {
             team.setHasJoinNum(hasJoinTeamNum.getOrDefault(team.getId(), new ArrayList<>()).size());
         });
+        for (TeamUserVO teamUserVO : teamList) {
+            teamUserVO.setPassword(StringUtils.EMPTY);
+        }
         return ResultUtils.success(teamList);
     }
 
@@ -177,8 +181,18 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
-        teamQuery.setUserId(loginUser.getId());
-        List<TeamUserVO> teamList = teamService.listTeams(teamQuery, loginUser);
+        Long loginUserId = loginUser.getId();
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId", loginUserId);
+        List<Team> teamsByLoginUser = teamService.list(queryWrapper);
+        List<Long> myTeams = teamsByLoginUser.stream().map(Team::getId).collect(Collectors.toList());
+        teamQuery.setIdList(myTeams);
+        teamQuery.setUserId(loginUserId);
+        List<TeamUserVO> teamList = teamService.listTeamsByJoin(teamQuery, loginUser);
+        //脱敏密码信息，不然前端可以看到
+        for (TeamUserVO teamUserVO : teamList) {
+            teamUserVO.setPassword(StringUtils.EMPTY);
+        }
         getJoinTeamUserNum(teamList);
         return ResultUtils.success(teamList);
     }
@@ -209,7 +223,10 @@ public class TeamController {
         // 取出不重复的队伍id集合
         List<Long> idList = new ArrayList<>(listMap.keySet());
         teamQuery.setIdList(idList);
-        List<TeamUserVO> teamList = teamService.listTeams(teamQuery, loginUser);
+        List<TeamUserVO> teamList = teamService.listTeamsByJoin(teamQuery, loginUser);
+        for (TeamUserVO teamUserVO : teamList) {
+            teamUserVO.setPassword(StringUtils.EMPTY);
+        }
         getHasJoinTeam(loginUser, teamList);
         getJoinTeamUserNum(teamList);
         return ResultUtils.success(teamList);
