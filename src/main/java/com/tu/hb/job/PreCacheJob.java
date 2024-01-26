@@ -14,7 +14,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +39,7 @@ public class PreCacheJob {
      */
     private List<Long> mainUsers = Arrays.asList(1L);
 
-    @Scheduled(cron = "0 26 16 * * *")
+    @Scheduled(cron = "0 0 2 * * *")
     public void doRecommendUser() {
         RLock lock = redissonClient.getLock("hb:preCache:doCache:lock");
         try {
