@@ -16,7 +16,7 @@
 2. Vant UI 组件库（移动端）
 3. Vite 脚手架
 4. Axios 请求库
-   <a name="GoiqP"></a>
+<a name="GoiqP"></a>
 ### 后端
 
 1. Java SpringBoot 2.6.x 框架
@@ -27,16 +27,16 @@
 6. Redisson 分布式锁
 7. Swagger + Knife4j 接口文档
 8. Gson：JSON 序列化库
-   <a name="Wk7mW"></a>
+<a name="Wk7mW"></a>
 ## 项目启动
 <a name="rWUvl"></a>
 ### 前端
-导入依赖<br />`npm install`<br />运行<br />`npm run dev`<br />打包<br />`npm run build`
+导入依赖<br />npm insatll<br />运行<br />npm run dev<br />打包<br />npm run build
 <a name="hkvE1"></a>
 ### 后端
 
 1. 安装相关maven依赖
 2. 运行doc目录下的sql文件进行建表
 3. 修改application.yml相关配置文件
-   <a name="WLPzd"></a>
+<a name="WLPzd"></a>
 ### <br />
